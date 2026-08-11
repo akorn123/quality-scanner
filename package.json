@@ -40,7 +40,7 @@
     "README.md"
   ],
   "bin": {
-    "quality-scanner": "./index.cjs"
+    "quality-scanner": "index.cjs"
   },
   "scripts": {
     "test": "node --test tests/**/*.test.cjs",
