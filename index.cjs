@@ -28,6 +28,7 @@ const {
 
 const {
   buildQuality,
+  evaluateQualityGate,
 } = require('./lib/quality.cjs');
 
 const {
@@ -79,6 +80,15 @@ const printRules = (rules) => {
   }
 };
 
+const emptyArtifacts = () => ({
+  source: null,
+  eMarkers: 0,
+  approvedExcluded: 0,
+  fixableCandidates: 0,
+  unclassified: 0,
+  byFile: [],
+});
+
 const main = async () => {
   const {
     config,
@@ -108,6 +118,12 @@ const main = async () => {
 
   const files =
     resolveFiles(config);
+
+  if (files.length === 0) {
+    throw new Error(
+      'No files matched the configured scanRoots. Check scanRoots and ignore settings.',
+    );
+  }
 
   const sourceFiles =
     files.filter(
@@ -150,13 +166,16 @@ const main = async () => {
         coverage.byFile,
 
       config,
+      concern,
     });
 
   const artifacts =
-    analyzeCoverageArtifacts(
-      scans.testability,
-      config,
-    );
+    coverageRequired
+      ? analyzeCoverageArtifacts(
+          scans.testability,
+          config,
+        )
+      : emptyArtifacts();
 
   const quality =
     buildQuality({
@@ -272,105 +291,37 @@ const main = async () => {
     return 0;
   }
 
-  const selectedFailures = [];
-
-  if (
-    (
-      concern === 'all' ||
-      concern === 'behavior'
-    ) &&
-    (
-      quality.behavior.fatal ||
-      quality.behavior.errors ||
-      quality.behavior.score <
-        config.thresholds.behavior
-    )
-  ) {
-    selectedFailures.push(
-      'behavior',
-    );
-  }
-
-  if (
-    (
-      concern === 'all' ||
-      concern === 'testability'
-    ) &&
-    quality.testability.score <
-      config.thresholds.testability
-  ) {
-    selectedFailures.push(
-      'testability',
-    );
-  }
-
-  if (
-    (
-      concern === 'all' ||
-      concern === 'coverage'
-    ) &&
-    (
-      quality.coverage.adjusted
-        ?.branches ?? 100
-    ) <
-      config.thresholds.adjustedBranches
-  ) {
-    selectedFailures.push(
-      'coverage',
-    );
-  }
-
-  if (
-    (
-      concern === 'all' ||
-      concern === 'security'
-    ) &&
-    (
-      quality.security.fatal > 0 ||
-      quality.security.errors > 0 ||
-      quality.security.score <
-        config.thresholds.security
-    )
-  ) {
-    selectedFailures.push(
-      'security',
-    );
-  }
-
-  if (
-    concern === 'all' &&
-    (
-      quality.tests.failed ?? 0
-    ) > 0
-  ) {
-    selectedFailures.push(
-      'tests',
-    );
-  }
-
-  return selectedFailures.length
-    ? 1
-    : 0;
+  return evaluateQualityGate({
+    quality,
+    concern,
+    thresholds: config.thresholds,
+  }).exitCode;
 };
 
-main()
-  .then((exitCode) => {
-    process.exitCode = exitCode;
-  })
-  .catch((error) => {
-    console.error(
-      '\nQuality scanner failed\n----------------------',
-    );
-
-    let current = error;
-
-    while (current) {
+if (require.main === module) {
+  main()
+    .then((exitCode) => {
+      process.exitCode = exitCode;
+    })
+    .catch((error) => {
       console.error(
-        current.message ?? String(current),
+        '\nQuality scanner failed\n----------------------',
       );
 
-      current = current.cause;
-    }
+      let current = error;
 
-    process.exitCode = 1;
-  });
+      while (current) {
+        console.error(
+          current.message ?? String(current),
+        );
+
+        current = current.cause;
+      }
+
+      process.exitCode = 1;
+    });
+}
+
+module.exports = {
+  main,
+};

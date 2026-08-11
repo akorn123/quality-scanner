@@ -494,4 +494,22 @@ Minimum `node:test` cases that would lock the highest-risk behavior:
 ## 8. Closing note
 
 The package has a solid conceptual model (shared rule engine, coverage accountability, multi-concern quality gate). The largest gaps are **publish/CLI packaging**, **Windows execution**, **suppression holes**, and **coverage-adjustment correctness**—plus **docs/defaults** that still reflect a host application rather than a reusable npm tool. Addressing P0/P1 would make the project trustworthy enough for internal CI; P2/P3 would make it maintainable as a public package.
+
+---
+
+## 9. Additional findings
+
+### C20 — Test progress bar is indeterminate only — **Bug** / UX
+
+**Evidence:**
+
+- [`lib/progress.cjs`](lib/progress.cjs) already exports `createDeterminateProgress` (percent + `completed/total` fill).
+- [`lib/test-runner.cjs`](lib/test-runner.cjs) `runProcess` only uses `createProgress`, which renders a bouncing green pulse over a dim bar plus elapsed time—no completion fraction.
+- Child `stdout`/`stderr` are piped and buffered for later parsing, but never streamed into progress updates.
+
+**Impact:** Long test/coverage runs look “alive” but give no sense of how far along they are.
+
+**Suggestion:** Prefer `createDeterminateProgress` when a total is knowable (e.g. discover test count first, or parse runner reporter events / TAP / Vitest/Jest progress lines from streamed stdout). Fall back to indeterminate only when total is unknown; during coverage finalization, use the existing `coverage()` 99% hold.
+
+**Backlog (P2):** Wire determinate progress into `runProcess` / runner adapters so the bar reflects real test completion when possible (C20).
 )

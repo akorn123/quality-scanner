@@ -24,9 +24,26 @@
   "license": "MIT",
   "author": "aaronmw09@gmail.com",
   "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "main": "./index.cjs",
+  "exports": {
+    ".": "./index.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.cjs",
+    "config.cjs",
+    "lib",
+    "rules",
+    "README.md"
+  ],
+  "bin": {
+    "quality-scanner": "./index.cjs"
+  },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test tests/**/*.test.cjs",
     "dev": "node index.cjs"
   }
 }
