@@ -44,6 +44,20 @@ Run without a non-zero quality gate exit code:
 node index.cjs --no-fail
 ```
 
+Emit a CI-friendly dashboard payload as JSON into a directory:
+
+```bash
+npx quality-scanner -ci ./quality-scanner-report
+```
+
+You can also point the scanner at an existing coverage artifact directory or file without rerunning test collection:
+
+```bash
+npx quality-scanner -ci ./quality-scanner-report -coverage-target="./coverage"
+```
+
+This writes `quality-scanner-report.json` containing the same per-concern dashboard payload the HTML report would expose (`quality`, `behavior`, `testability`, and `security` sections plus their summaries). In CI mode the scanner emits a GitLab-friendly console pass/fail line and exits with a non-zero code only when the computed `releaseConfidence` is `Blocked`.
+
 Reuse today's fresh test/coverage artifacts:
 
 ```bash

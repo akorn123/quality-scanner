@@ -32,6 +32,7 @@ const {
 } = require('./lib/quality.cjs');
 
 const {
+  writeCiReport,
   writeReports,
 } = require('./lib/reports.cjs');
 
@@ -46,13 +47,57 @@ const {
 const getArg = (name) => {
   const index = process.argv.indexOf(name);
 
-  return index >= 0
-    ? process.argv[index + 1]
-    : null;
+  if (index >= 0) {
+    return process.argv[index + 1] ?? null;
+  }
+
+  const assignment =
+    process.argv.find((arg) =>
+      arg.startsWith(`${name}=`),
+    );
+
+  if (!assignment) {
+    return null;
+  }
+
+  return assignment.slice(name.length + 1);
 };
 
 const has = (name) =>
   process.argv.includes(name);
+
+const getArgValue = (name, aliases = []) => {
+  const names = [name, ...aliases];
+
+  for (const option of names) {
+    const value = getArg(option);
+    if (value) {
+      return value;
+    }
+  }
+
+  return null;
+};
+
+const getCiOutputDir = () => {
+  const ciArg =
+    getArgValue('-ci', ['--ci']);
+
+  const skipArgs = new Set([
+    '--concern',
+    '--config',
+    '--no-fail',
+    '--reuse-artifacts',
+    '--no-open',
+    '--list-rules',
+  ]);
+
+  if (!ciArg || skipArgs.has(ciArg)) {
+    return null;
+  }
+
+  return ciArg;
+};
 
 const printRules = (rules) => {
   console.log('Behavior rules');
@@ -90,6 +135,19 @@ const emptyArtifacts = () => ({
 });
 
 const main = async () => {
+  const isCiMode =
+    has('-ci') ||
+    has('--ci');
+
+  const ciOutputDir =
+    getCiOutputDir();
+
+  if (isCiMode && !ciOutputDir) {
+    throw new Error(
+      'CI mode requires an output directory, e.g. `quality-scanner -ci ./quality-scanner-report`.',
+    );
+  }
+
   const {
     config,
     configFile,
@@ -99,6 +157,9 @@ const main = async () => {
 
   const concern =
     getArg('--concern') ?? 'all';
+
+  const coverageTarget =
+    getArgValue('-coverage-target', ['--coverage-target']);
 
   const rules =
     getRules(config);
@@ -151,6 +212,7 @@ const main = async () => {
     loadCoverage(
       config,
       coverageRequired,
+      coverageTarget,
     );
 
   const scans =
@@ -199,6 +261,42 @@ const main = async () => {
       config,
       testFiles,
     });
+
+  if (isCiMode) {
+    const ciJson =
+      writeCiReport({
+        scans,
+        artifacts,
+        quality,
+        testFiles,
+        outputDir: ciOutputDir,
+      });
+
+    console.log('');
+    console.log(
+      `CI dashboard JSON: ${relative(
+        process.cwd(),
+        ciJson,
+      )}`,
+    );
+
+    const ciPassed =
+      quality.releaseConfidence !== 'Blocked';
+
+    console.log(
+      `GitLab CI readout: ${ciPassed ? 'PASS' : 'FAIL'} releaseConfidence=${quality.releaseConfidence}`,
+    );
+
+    if (ciPassed) {
+      return 0;
+    }
+
+    console.error(
+      `GitLab CI readout: FAIL releaseConfidence=${quality.releaseConfidence} because the release confidence was Blocked.`,
+    );
+
+    return 1;
+  }
 
   const reportServer =
     has('--no-open')
