@@ -45,6 +45,7 @@ const {
 } = require('./lib/report-server.cjs');
 
 const {
+  formatCiReadout,
   formatCiSummary,
 } = require('./lib/terminal-report.cjs');
 
@@ -324,13 +325,23 @@ const main = async () => {
 
     if (ciPassed) {
       console.log(
-        `GitLab CI readout: PASS releaseConfidence=${quality.releaseConfidence}`,
+        formatCiReadout({
+          passed: true,
+          releaseConfidence:
+            quality.releaseConfidence,
+        }),
       );
       return 0;
     }
 
     console.error(
-      `GitLab CI readout: FAIL releaseConfidence=${quality.releaseConfidence} because the release confidence was Blocked.`,
+      formatCiReadout({
+        passed: false,
+        releaseConfidence:
+          quality.releaseConfidence,
+        detail:
+          'because the release confidence was Blocked.',
+      }),
     );
 
     return 1;

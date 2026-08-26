@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const {
   buildFileScores,
+  formatCiReadout,
   formatCiSummary,
   scoreBar,
 } = require('../lib/terminal-report.cjs');
@@ -67,6 +68,96 @@ describe('CI terminal report', () => {
     assert.match(
       scoreBar(null, 'Unknown', { width: 4, color: true }),
       /^\x1b\[90m/,
+    );
+  });
+
+  it('colors the GitLab status and release confidence independently', () => {
+    assert.equal(
+      formatCiReadout({
+        passed: true,
+        releaseConfidence: 'Needs Review',
+        color: true,
+      }),
+      'GitLab CI readout: \x1b[32mPASS\x1b[0m releaseConfidence=\x1b[33mNeeds Review\x1b[0m',
+    );
+    assert.equal(
+      formatCiReadout({
+        passed: false,
+        releaseConfidence: 'Blocked',
+        color: true,
+      }),
+      'GitLab CI readout: \x1b[31mFAIL\x1b[0m releaseConfidence=\x1b[31mBlocked\x1b[0m',
+    );
+  });
+
+  it('colors summary status values and release checks', () => {
+    const output = formatCiSummary({
+      scans: {
+        behavior: [],
+        testability: [],
+        security: [],
+      },
+      quality: {
+        overallScore: 90,
+        healthLabel: 'Strong',
+        releaseConfidence: 'Needs Review',
+        releaseChecks: [
+          {
+            level: 'review',
+            message: 'Review this result.',
+          },
+        ],
+        behavior: {
+          score: 90,
+          findings: 1,
+          errors: 1,
+        },
+        testability: {
+          score: 90,
+          findings: 1,
+          warnings: 1,
+        },
+        security: { score: 100, findings: 0 },
+        coverage: {
+          rawAverage: 90,
+          adjustedAverage: 90,
+          adjusted: {},
+        },
+        tests: {
+          passRate: 50,
+          passed: 1,
+          failed: 1,
+          total: 2,
+        },
+      },
+      artifacts: {
+        approvedExcluded: 0,
+        fixableCandidates: 1,
+        unclassified: 1,
+      },
+      width: 4,
+      color: true,
+    });
+
+    assert.match(
+      output,
+      /Release confidence: \x1b\[33mNeeds Review\x1b\[0m/,
+    );
+    assert.match(
+      output,
+      /Health:\s+\x1b\[32mStrong\x1b\[0m/,
+    );
+    assert.match(
+      output,
+      /Tests:\s+\x1b\[31m1 passed \/ 2 total\x1b\[0m/,
+    );
+    assert.match(
+      output,
+      /Findings:\s+behavior \x1b\[31m1\x1b\[0m · testability \x1b\[33m1\x1b\[0m · security \x1b\[32m0\x1b\[0m/,
+    );
+    assert.match(
+      output,
+      /\x1b\[33m\[REVIEW\] Review this result\.\x1b\[0m/,
     );
   });
 

@@ -64,6 +64,8 @@ This writes `quality-scanner-report.json` containing the same per-concern dashbo
 
 CI score bars are green at 80% or higher, yellow from 50% through 79.99%, red below 50%, and gray when a score is unavailable. Set `NO_COLOR=1` to disable ANSI colors.
 
+The final CI readout also colors release confidence, health, test outcomes, finding counts, coverage-marker counts, release checks, and the GitLab `PASS`/`FAIL` status according to their severity.
+
 Reuse today's fresh test/coverage artifacts:
 
 ```bash
