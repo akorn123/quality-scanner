@@ -26,6 +26,15 @@ module.exports = {
   testablePathPrefixes: [],
 
   /*
+   * Normalized scanner results and Vitest's JSON reporter format are
+   * supported. These defaults are shown here for clarity.
+   */
+  testResultsPaths: [
+    'reports/test-results.json',
+    'reports/vitest-results.json',
+  ],
+
+  /*
    * Project-specific behavior rules are appended to the built-in defaults.
    * Encode local engineering conventions here without forking the scanner.
    */

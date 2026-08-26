@@ -44,6 +44,10 @@ const {
   launchReport,
 } = require('./lib/report-server.cjs');
 
+const {
+  formatCiSummary,
+} = require('./lib/terminal-report.cjs');
+
 const getArg = (name) => {
   const index = process.argv.indexOf(name);
 
@@ -134,6 +138,10 @@ const emptyArtifacts = () => ({
   byFile: [],
 });
 
+const shouldRunTestCollection = ({
+  coverageTarget,
+}) => !coverageTarget;
+
 const main = async () => {
   const isCiMode =
     has('-ci') ||
@@ -169,13 +177,21 @@ const main = async () => {
     return 0;
   }
 
-  const testRun =
-    await runProjectTests({
-      config,
-      concern,
-      reuseArtifacts:
-        has('--reuse-artifacts'),
-    });
+  const testRun = shouldRunTestCollection({
+    coverageTarget,
+  })
+    ? await runProjectTests({
+        config,
+        concern,
+        reuseArtifacts:
+          has('--reuse-artifacts'),
+        ciMode: isCiMode,
+      })
+    : {
+        ran: false,
+        runner: null,
+        detected: [],
+      };
 
   const files =
     resolveFiles(config);
@@ -250,7 +266,8 @@ const main = async () => {
       config,
 
       requireTests:
-        concern === 'all',
+        concern === 'all' &&
+        !coverageTarget,
     });
 
   const paths =
@@ -274,6 +291,28 @@ const main = async () => {
 
     console.log('');
     console.log(
+      formatCiSummary({
+        scans,
+        quality,
+        artifacts,
+        coverageFile:
+          coverage.file
+            ? relative(
+                process.cwd(),
+                coverage.file,
+              )
+            : null,
+        testResultsFile:
+          quality.tests.file
+            ? relative(
+                process.cwd(),
+                quality.tests.file,
+              )
+            : null,
+      }),
+    );
+    console.log('');
+    console.log(
       `CI dashboard JSON: ${relative(
         process.cwd(),
         ciJson,
@@ -283,11 +322,10 @@ const main = async () => {
     const ciPassed =
       quality.releaseConfidence !== 'Blocked';
 
-    console.log(
-      `GitLab CI readout: ${ciPassed ? 'PASS' : 'FAIL'} releaseConfidence=${quality.releaseConfidence}`,
-    );
-
     if (ciPassed) {
+      console.log(
+        `GitLab CI readout: PASS releaseConfidence=${quality.releaseConfidence}`,
+      );
       return 0;
     }
 
@@ -422,4 +460,5 @@ if (require.main === module) {
 
 module.exports = {
   main,
+  shouldRunTestCollection,
 };

@@ -1,11 +1,15 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const {
   averageScore,
   getAdjustedMetric,
   computePassRate,
   evaluateQualityGate,
+  loadTestResults,
 } = require('../lib/quality.cjs');
 
 describe('averageScore', () => {
@@ -66,6 +70,55 @@ describe('computePassRate', () => {
     });
 
     assert.equal(rate, 88.89);
+  });
+});
+
+describe('loadTestResults', () => {
+  it('normalizes Vitest JSON reporter output', () => {
+    const tmpDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'quality-scanner-vitest-results-'),
+    );
+    const file = path.join(tmpDir, 'vitest-results.json');
+    fs.writeFileSync(
+      file,
+      JSON.stringify({
+        numTotalTests: 12,
+        numPassedTests: 9,
+        numFailedTests: 1,
+        numPendingTests: 2,
+        numTodoTests: 0,
+        success: false,
+      }),
+    );
+
+    const results = loadTestResults(
+      {
+        testResultsPaths: [file],
+        freshness: { requireToday: false },
+      },
+      true,
+    );
+
+    assert.deepEqual(
+      {
+        runner: results.runner,
+        total: results.total,
+        passed: results.passed,
+        failed: results.failed,
+        skipped: results.skipped,
+        todo: results.todo,
+        passRate: results.passRate,
+      },
+      {
+        runner: 'vitest',
+        total: 12,
+        passed: 9,
+        failed: 1,
+        skipped: 2,
+        todo: 0,
+        passRate: 90,
+      },
+    );
   });
 });
 

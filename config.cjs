@@ -38,6 +38,8 @@ module.exports = {
   coverageSummaryPaths: [
     'reports/coverage/coverage-summary.json',
     'coverage/coverage-summary.json',
+    'reports/coverage/coverage-final.json',
+    'coverage/coverage-final.json',
   ],
 
   lcovReportDirs: [
@@ -49,6 +51,7 @@ module.exports = {
 
   testResultsPaths: [
     'reports/test-results.json',
+    'reports/vitest-results.json',
   ],
 
   freshness: {

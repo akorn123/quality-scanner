@@ -50,13 +50,17 @@ Emit a CI-friendly dashboard payload as JSON into a directory:
 npx quality-scanner -ci ./quality-scanner-report
 ```
 
-You can also point the scanner at an existing coverage artifact directory or file without rerunning test collection:
+You can also point the scanner at an existing coverage artifact directory or file without rerunning test collection. Both Istanbul `coverage-summary.json` and `coverage-final.json` files are supported:
 
 ```bash
 npx quality-scanner -ci ./quality-scanner-report -coverage-target="./coverage"
 ```
 
-This writes `quality-scanner-report.json` containing the same per-concern dashboard payload the HTML report would expose (`quality`, `behavior`, `testability`, and `security` sections plus their summaries). In CI mode the scanner emits a GitLab-friendly console pass/fail line and exits with a non-zero code only when the computed `releaseConfidence` is `Blocked`.
+When an explicit coverage target is used and `reports/test-results.json` is not available, coverage and static scan scores are still reported while the test pass rate is shown as `N/A`.
+
+Vitest's JSON reporter output at `reports/vitest-results.json` is also discovered automatically. In a split CI pipeline, preserve both `coverage/` and `reports/vitest-results.json` from the test aggregation job so the quality scan can reuse coverage and test pass/fail counts without rerunning tests.
+
+This writes `quality-scanner-report.json` containing the same per-concern dashboard payload the HTML report would expose (`quality`, `behavior`, `testability`, and `security` sections plus their summaries). CI mode suppresses the live test/coverage progress display and emits one final, timestamp-friendly terminal report with quality and coverage bars plus folder/file scan scores. It also emits a GitLab-friendly console pass/fail line and exits with a non-zero code only when the computed `releaseConfidence` is `Blocked`.
 
 Reuse today's fresh test/coverage artifacts:
 
