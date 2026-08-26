@@ -39,8 +39,34 @@ const scans = {
 describe('CI terminal report', () => {
   it('renders a fixed-width score bar', () => {
     assert.equal(
-      scoreBar(50, 'Example', { width: 10 }),
-      '█████░░░░░      50%  Example',
+      scoreBar(50, 'Example', {
+        width: 10,
+        color: true,
+      }),
+      '\x1b[33m█████░░░░░\x1b[0m      50%  Example',
+    );
+  });
+
+  it('colors bars using CI quality thresholds', () => {
+    assert.match(
+      scoreBar(80, 'Green', { width: 4, color: true }),
+      /^\x1b\[32m/,
+    );
+    assert.match(
+      scoreBar(79.99, 'Yellow', { width: 4, color: true }),
+      /^\x1b\[33m/,
+    );
+    assert.match(
+      scoreBar(50, 'Yellow', { width: 4, color: true }),
+      /^\x1b\[33m/,
+    );
+    assert.match(
+      scoreBar(49.99, 'Red', { width: 4, color: true }),
+      /^\x1b\[31m/,
+    );
+    assert.match(
+      scoreBar(null, 'Unknown', { width: 4, color: true }),
+      /^\x1b\[90m/,
     );
   });
 
@@ -110,6 +136,7 @@ describe('CI terminal report', () => {
       coverageFile: 'coverage/coverage-summary.json',
       testResultsFile: 'reports/vitest-results.json',
       width: 10,
+      color: false,
     });
 
     assert.match(output, /Quality Scanner CI Results/);

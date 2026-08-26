@@ -62,6 +62,8 @@ Vitest's JSON reporter output at `reports/vitest-results.json` is also discovere
 
 This writes `quality-scanner-report.json` containing the same per-concern dashboard payload the HTML report would expose (`quality`, `behavior`, `testability`, and `security` sections plus their summaries). CI mode suppresses the live test/coverage progress display and emits one final, timestamp-friendly terminal report with quality and coverage bars plus folder/file scan scores. It also emits a GitLab-friendly console pass/fail line and exits with a non-zero code only when the computed `releaseConfidence` is `Blocked`.
 
+CI score bars are green at 80% or higher, yellow from 50% through 79.99%, red below 50%, and gray when a score is unavailable. Set `NO_COLOR=1` to disable ANSI colors.
+
 Reuse today's fresh test/coverage artifacts:
 
 ```bash
