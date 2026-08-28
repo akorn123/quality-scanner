@@ -41,6 +41,24 @@ describe('config merge', () => {
     );
   });
 
+  it('merges frontend security allow-pattern extensions', () => {
+    const merged = merge(defaults, {
+      security: {
+        trustedHtmlSanitizerPatternsExtra: [/projectSanitizeHtml/],
+        insecureTransportAllowedPatternsExtra: [/dev-api\.internal/],
+      },
+    });
+
+    assert.equal(
+      merged.security.trustedHtmlSanitizerPatterns.length,
+      defaults.security.trustedHtmlSanitizerPatterns.length + 1,
+    );
+    assert.equal(
+      merged.security.insecureTransportAllowedPatterns.length,
+      defaults.security.insecureTransportAllowedPatterns.length + 1,
+    );
+  });
+
   it('pickList replaces when override is defined', () => {
     assert.deepEqual(pickList(['a'], ['b'], ['c']), ['b', 'c']);
     assert.deepEqual(pickList(['a'], undefined, ['c']), ['a', 'c']);

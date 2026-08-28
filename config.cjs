@@ -6,6 +6,7 @@ module.exports = {
     'dist',
     'coverage',
     '.git',
+    '.quality-scanner',
     '.next',
     'build',
     'reports',
@@ -34,6 +35,12 @@ module.exports = {
 
   reportDir:
     'reports/quality-scanner',
+
+  dashboard: {
+    defaultTheme: 'dark',
+    preferenceFile:
+      '.quality-scanner/quality-scanner-preferences.json',
+  },
 
   coverageSummaryPaths: [
     'reports/coverage/coverage-summary.json',
@@ -112,6 +119,17 @@ module.exports = {
 
   security: {
     enabled: true,
+
+    frontendEnabled: true,
+
+    trustedHtmlSanitizerPatterns: [
+      /\bDOMPurify\.sanitize\s*\(/,
+      /\bsanitizeHtml\s*\(/,
+    ],
+
+    insecureTransportAllowedPatterns: [
+      /\b(?:http|ws):\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:[/'"`]|$)/i,
+    ],
 
     authMiddlewarePatterns: [
       /\brequireAuth\b/,

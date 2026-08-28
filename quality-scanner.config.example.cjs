@@ -17,6 +17,15 @@ module.exports = {
   scanRoots: ['src'],
 
   /*
+   * Dashboard theme defaults to dark on first run. The preference file is
+   * project-owned, so it survives npm package updates.
+   */
+  dashboard: {
+    defaultTheme: 'dark',
+    preferenceFile: '.quality-scanner/quality-scanner-preferences.json',
+  },
+
+  /*
    * When empty (default), every non-test source file under scanRoots is
    * treated as a testable coverage target.
    *
@@ -63,6 +72,8 @@ module.exports = {
      *   authMiddlewarePatterns / authMiddlewarePatternsExtra
      *   authorizationMiddlewarePatterns / authorizationMiddlewarePatternsExtra
      *   rateLimitMiddlewarePatterns / rateLimitMiddlewarePatternsExtra
+     *   trustedHtmlSanitizerPatterns / trustedHtmlSanitizerPatternsExtra
+     *   insecureTransportAllowedPatterns / insecureTransportAllowedPatternsExtra
      *   sensitivePathPatterns / sensitivePathPatternsExtra
      *   authenticationEndpointPatterns / authenticationEndpointPatternsExtra
      */
@@ -92,6 +103,20 @@ module.exports = {
 
     rateLimitMiddlewarePatternsExtra: [
       // /\bsignInRateLimiter\b/,
+    ],
+
+    /*
+     * Frontend checks are enabled by default. Set this to false only when
+     * browser-focused scanning is intentionally handled elsewhere.
+     */
+    frontendEnabled: true,
+
+    trustedHtmlSanitizerPatternsExtra: [
+      // /\bprojectSanitizeHtml\s*\(/,
+    ],
+
+    insecureTransportAllowedPatternsExtra: [
+      // /\bhttp:\/\/dev-api\.internal(?::\d+)?\//i,
     ],
   },
 

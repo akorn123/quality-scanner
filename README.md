@@ -2,6 +2,32 @@
 
 `quality-scanner` consolidates behavioral scanning, testability analysis, coverage-accountability analysis, security checks, and project quality reporting into one pipeline.
 
+![Quality Scanner dashboard showing Overall Quality, Release Confidence, Test Pass Rate, and Coverage Score](./assets/img/dashboard-landing1.png)
+
+## Understanding the dashboard
+
+The four headline metrics answer different questions. Together, they provide a quick quality summary without allowing a strong average to hide a release-blocking problem.
+
+### Overall Quality
+
+**Overall Quality** is the weighted project score. By default, it combines Coverage Score (30%), Test Pass Rate (20%), testability (15%), behavior (15%), and security (20%). If a metric is unavailable, the available weights are normalized rather than treating the missing metric as zero. The accompanying health label translates the number into a quick status: Excellent (95+), Strong (90–94.99), Healthy (80–89.99), Needs Review (70–79.99), or At Risk (below 70).
+
+### Release Confidence
+
+**Release Confidence** is a risk classification—`High`, `Moderate`, `Needs Review`, `Blocked`, or `Unknown`—built from explicit release checks rather than another weighted average. Failing tests, fatal behavior findings, and fatal or error-level security findings can block a release. Security warnings, behavior errors, skipped tests, adjusted branch coverage below its threshold, or unclassified uncovered branches require review; an Overall Quality score below its threshold produces Moderate confidence.
+
+This separate signal is valuable because averages can conceal critical failures. A high Overall Quality score should not make a release look safe when tests are failing or a serious security boundary is missing. Release Confidence surfaces the most severe active check and provides the reasons behind it, making it the more actionable go/no-go indicator.
+
+### Test Pass Rate
+
+**Test Pass Rate** is `passed / (passed + failed) × 100`. Skipped and todo tests are reported, but they are not counted as executed tests in this percentage. The score is `N/A` when no usable test result artifact or no executed tests are available.
+
+### Coverage Score
+
+**Coverage Score** is the average of the scanner's adjusted statement, branch, function, and line coverage percentages. It intentionally differs from the raw Istanbul coverage shown beneath it. Raw coverage describes exactly what the test suite reported; adjusted coverage removes skipped units from the relevant denominator and, for branches, also removes only verified scanner-approved tooling exclusions. Approved branch adjustments are capped at Istanbul's uncovered branch count, while fixable and unclassified uncovered branches remain in the denominator.
+
+This distinction is valuable because generated or tooling-only branches can lower raw coverage without representing behavior that should be tested. The Coverage Score makes those narrowly approved exceptions accountable while preserving real gaps, so teams get a more useful quality signal without silently inflating coverage. The raw value remains visible for transparency and comparison with the test runner.
+
 ## Why this structure
 
 The scanner has separate concerns but one engine:
@@ -9,7 +35,7 @@ The scanner has separate concerns but one engine:
 - **behavior**: team engineering practices and project-specific patterns
 - **testability**: source patterns that create difficult/noisy coverage branches
 - **coverage accountability**: correlates Istanbul uncovered-branch markers with scanner findings and explicit approved exclusions
-- **security**: Express endpoint inventory and auth/rate-limit boundary checks
+- **security**: frontend injection, storage, messaging, and transport checks plus Express endpoint security boundaries
 - **quality**: combines adjusted coverage, test pass rate, testability, behavior, and security into one project score/report
 
 A concern is not a separate scanner implementation. Rules share the same file discovery, ignore model, scoring, reporting, and CLI.
@@ -176,7 +202,56 @@ The HTML dashboard embeds source context for every finding. Clicking a file/line
 
 Unless `--no-open` is passed, the scanner starts a local Node static server on an ephemeral port and opens the dashboard URL.
 
+### Dashboard theme preference
+
+The dashboard defaults to dark mode. Use the Dark mode / Light mode toggle in the top-right corner to change it. The live dashboard saves the selection in the scanned project at:
+
+```text
+.quality-scanner/quality-scanner-preferences.json
+```
+
+The next dashboard run reads this file before rendering, so the saved theme is selected automatically. Because the file belongs to the scanned project rather than the installed package under `node_modules`, updating `quality-scanner` does not reset it. Add `.quality-scanner/quality-scanner-preferences.json` to the project's `.gitignore` when the theme should remain a per-user preference.
+
+The location and first-run theme can be configured if needed:
+
+```js
+module.exports = {
+  dashboard: {
+    defaultTheme: 'dark',
+    preferenceFile: '.quality-scanner/quality-scanner-preferences.json',
+  },
+};
+```
+
+Saving requires the local dashboard server started by the normal `npx quality-scanner` flow. A standalone `file://` copy still uses the theme embedded when the report was generated, but cannot write the preference file directly.
+
 The scanner intentionally writes only the current scan. Historical/trend storage is outside the scope of this tool and can be layered on later.
+
+## Frontend security scanning
+
+The security concern also scans browser JavaScript, TypeScript, JSX, and TSX for high-signal client-side risks:
+
+- `unsafe-dom-html-injection` — direct HTML sinks such as `innerHTML`, `document.write`, `insertAdjacentHTML`, and React's `dangerouslySetInnerHTML`
+- `dynamic-code-execution` — `eval`, `new Function`, or string-based timers
+- `sensitive-browser-storage` — credential-like values written to `localStorage` or `sessionStorage`
+- `wildcard-postmessage-origin` — cross-window messages sent with a `*` target origin
+- `insecure-frontend-transport` — non-local browser requests using HTTP or unencrypted WebSockets
+- `javascript-url` — executable `javascript:` navigation URLs
+
+Known `DOMPurify.sanitize(...)` and `sanitizeHtml(...)` calls are accepted for HTML sinks, and localhost/loopback HTTP and WebSocket URLs are accepted for local development. Projects can replace or append to those patterns:
+
+```js
+module.exports = {
+  security: {
+    trustedHtmlSanitizerPatternsExtra: [/\bprojectSanitizeHtml\s*\(/],
+    insecureTransportAllowedPatternsExtra: [
+      /\bhttp:\/\/dev-api\.internal(?::\d+)?\//i,
+    ],
+  },
+};
+```
+
+These checks identify risky browser APIs and trust boundaries; they do not perform runtime taint tracking or prove that a value is attacker-controlled. Use a documented `quality-scanner-ignore-next-line` directive for a reviewed exception. Set `security.frontendEnabled` to `false` only when frontend security is intentionally enforced elsewhere.
 
 ## Endpoint security scanning
 
