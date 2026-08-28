@@ -93,6 +93,7 @@ const getCiOutputDir = () => {
     '--config',
     '--no-fail',
     '--reuse-artifacts',
+    '--force-tests',
     '--no-open',
     '--list-rules',
   ]);
@@ -185,7 +186,7 @@ const main = async () => {
         config,
         concern,
         reuseArtifacts:
-          has('--reuse-artifacts'),
+          !has('--force-tests'),
         ciMode: isCiMode,
       })
     : {

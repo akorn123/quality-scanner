@@ -44,6 +44,14 @@ module.exports = {
   ],
 
   /*
+   * Existing test and coverage JSON is reused automatically when both
+   * artifacts are no older than this rolling window.
+   */
+  freshness: {
+    maxAgeHours: 24,
+  },
+
+  /*
    * Project-specific behavior rules are appended to the built-in defaults.
    * Encode local engineering conventions here without forking the scanner.
    */

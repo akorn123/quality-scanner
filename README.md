@@ -92,11 +92,25 @@ CI score bars are green at 80% or higher, yellow from 50% through 79.99%, red be
 
 The final CI readout also colors release confidence, health, test outcomes, finding counts, coverage-marker counts, release checks, and the GitLab `PASS`/`FAIL` status according to their severity.
 
-Reuse today's fresh test/coverage artifacts:
+Test and coverage artifacts are reused automatically when both are valid and were updated within the previous 24 hours. The scanner searches all configured `testResultsPaths` and `coverageSummaryPaths`, so artifacts remain discoverable even when a package update changes the preferred output location.
+
+To change the rolling freshness window:
+
+```js
+module.exports = {
+  freshness: {
+    maxAgeHours: 24,
+  },
+};
+```
+
+Force a new test and coverage run even when recent artifacts exist:
 
 ```bash
-node index.cjs --reuse-artifacts
+npx quality-scanner --force-tests
 ```
+
+The older `--reuse-artifacts` option remains accepted for compatibility, but reuse is now the default behavior.
 
 ## Recommended package.json scripts
 

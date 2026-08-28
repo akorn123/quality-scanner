@@ -62,7 +62,7 @@ module.exports = {
   ],
 
   freshness: {
-    requireToday: true,
+    maxAgeHours: 24,
   },
 
   testRunner: {
