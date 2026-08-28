@@ -1,6 +1,6 @@
 {
   "name": "quality-scanner",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "A unified code quality and security scanning CLI that aggregates results from multiple analysis tools into a single, easy-to-read report",
   "keywords": [
     "javascript",
