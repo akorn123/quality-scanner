@@ -45,29 +45,28 @@ A concern is not a separate scanner implementation. Rules share the same file di
 From this package (or after install):
 
 ```bash
-node index.cjs
 npx quality-scanner
 ```
 
 Specific gate:
 
 ```bash
-node index.cjs --concern behavior
-node index.cjs --concern testability
-node index.cjs --concern coverage
-node index.cjs --concern security
+npx quality-scanner --concern behavior
+npx quality-scanner --concern testability
+npx quality-scanner --concern coverage
+npx quality-scanner --concern security
 ```
 
 List rules:
 
 ```bash
-node index.cjs --list-rules
+npx quality-scanner --list-rules
 ```
 
 Run without a non-zero quality gate exit code:
 
 ```bash
-node index.cjs --no-fail
+npx quality-scanner --no-fail
 ```
 
 Emit a CI-friendly dashboard payload as JSON into a directory:
@@ -274,7 +273,7 @@ When frontend security is enabled and source files are scanned successfully, a c
 For JavaScript/TypeScript Express backends, the scanner includes a `security` concern that inventories static endpoint declarations and looks for missing or incomplete security boundaries.
 
 ```bash
-node index.cjs --concern security
+npx quality-scanner --concern security
 ```
 
 The scanner recognizes common forms including:
