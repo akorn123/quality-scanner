@@ -9,6 +9,7 @@ const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 
 const defaults = require('../config.cjs');
+const { buildQuality } = require('../lib/quality.cjs');
 const { analyzeSecurity } = require('../lib/security.cjs');
 
 describe('frontend security scanning', () => {
@@ -79,7 +80,40 @@ fetch('http://localhost:3000/api/status');
 `,
     );
 
-    assert.deepEqual(results, []);
+    assert.equal(results.length, 1);
+    assert.equal(results[0].framework, 'browser');
+    assert.equal(results[0].score, 100);
+    assert.deepEqual(results[0].findings, []);
+  });
+
+  it('returns a 100-point result when frontend files scan cleanly', () => {
+    const results = scan(
+      'clean-component.jsx',
+      `export const Greeting = ({ name }) => <p>Hello {name}</p>;`,
+    );
+
+    assert.equal(results.length, 1);
+    assert.equal(results[0].framework, 'browser');
+    assert.equal(results[0].score, 100);
+    assert.deepEqual(results[0].findings, []);
+
+    const quality = buildQuality({
+      scans: {
+        behavior: [],
+        testability: [],
+        security: results,
+      },
+      coverageSummary: null,
+      artifacts: {},
+      config: {
+        ...defaults,
+        testResultsPaths: [],
+        freshness: { requireToday: false },
+      },
+      requireTests: false,
+    });
+
+    assert.equal(quality.security.score, 100);
   });
 
   it('supports reviewed suppressions for frontend findings', () => {

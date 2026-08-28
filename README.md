@@ -253,6 +253,8 @@ module.exports = {
 
 These checks identify risky browser APIs and trust boundaries; they do not perform runtime taint tracking or prove that a value is attacker-controlled. Use a documented `quality-scanner-ignore-next-line` directive for a reviewed exception. Set `security.frontendEnabled` to `false` only when frontend security is intentionally enforced elsewhere.
 
+When frontend security is enabled and source files are scanned successfully, a clean scan reports a Security Score of 100. `N/A` is reserved for cases where security scanning is disabled or no source files were available to scan.
+
 ## Endpoint security scanning
 
 For JavaScript/TypeScript Express backends, the scanner includes a `security` concern that inventories static endpoint declarations and looks for missing or incomplete security boundaries.
