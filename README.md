@@ -176,6 +176,19 @@ Multiple targets:
 // quality-scanner-ignore-next-line rule-one,rule-two -- Reviewed exception.
 ```
 
+The `-- reason` suffix is required. A modern directive containing only a rule name is ignored and does not suppress the finding. When a matching finding remains, its description explains that the comment is missing a reason and shows how to add one. This also applies to a `--` suffix with an empty reason. Place the comment immediately above the reported line; for a multiline Express route, this is the line where the route call starts:
+
+```ts
+// quality-scanner-ignore-next-line endpoint-missing-authentication -- Reviewed logout exception.
+apiRouter.post("/auth/logout", auth.logoutHandler(), (_req, res) =>
+  res.json({
+    message: "Logged out",
+  }),
+);
+```
+
+Replace the example reason with the justification for your reviewed exception.
+
 Legacy forms still work:
 
 ```ts
