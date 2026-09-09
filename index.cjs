@@ -6,6 +6,7 @@ const { loadConfig } = require('./lib/config.cjs');
 
 const {
   resolveFiles,
+  resolvePaths,
   isTestFile,
 } = require('./lib/files.cjs');
 
@@ -144,7 +145,8 @@ const emptyArtifacts = () => ({
 
 const shouldRunTestCollection = ({
   coverageTarget,
-}) => !coverageTarget;
+  concern = 'all',
+}) => !coverageTarget && concern !== 'structure';
 
 const main = async () => {
   const isCiMode =
@@ -195,6 +197,7 @@ const main = async () => {
 
   const testRun = shouldRunTestCollection({
     coverageTarget,
+    concern,
   })
     ? await runProjectTests({
         config,
@@ -211,8 +214,10 @@ const main = async () => {
 
   const files =
     resolveFiles(config);
+  const resolvedPaths =
+    resolvePaths(config);
 
-  if (files.length === 0) {
+  if (files.length === 0 && concern !== 'structure') {
     throw new Error(
       'No files matched the configured scanRoots. Check scanRoots and ignore settings.',
     );
@@ -254,6 +259,8 @@ const main = async () => {
           testFiles,
         ),
 
+      paths: resolvedPaths,
+      pathRoot: process.cwd(),
       targetToTests,
 
       coverageByFile:
@@ -325,6 +332,7 @@ const main = async () => {
                 quality.tests.file,
               )
             : null,
+        color: false,
       }),
     );
     console.log('');

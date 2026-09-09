@@ -116,6 +116,8 @@ module.exports = {
 
   behaviorRules: [],
   testabilityRules: [],
+  pathRules: [],
+  organizationRules: [],
   coverageExclusionRules: [],
 
   security: {

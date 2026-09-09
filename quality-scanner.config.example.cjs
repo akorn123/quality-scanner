@@ -70,6 +70,66 @@ module.exports = {
     // },
   ],
 
+  /*
+   * Path rules inspect normalized project-relative file and directory paths.
+   * Use them for naming conventions, required paths, or forbidden path
+   * patterns. Matching paths produce structure findings; they do not inspect
+   * file contents.
+   *
+   * Set mode to 'required' for an exact path or path pattern that must exist.
+   * The default mode is 'forbidden'. Exact paths are project-relative.
+   */
+  pathRules: [
+    // {
+    //   id: 'no-pascal-case-source-paths',
+    //   category: 'naming',
+    //   severity: 'error',
+    //   penalty: 15,
+    //   description: 'Source paths must use lowercase kebab-case.',
+    //   suggestion: 'Rename the file or directory using lowercase kebab-case.',
+    //   pathPattern: /(?:^|[\\/])[^\\/]*[A-Z][^\\/]*(?:$|\.[cm]?[jt]sx?$)/,
+    // },
+    // {
+    //   id: 'requires-domain-directory',
+    //   mode: 'required',
+    //   path: 'src/domain',
+    //   category: 'structure',
+    //   severity: 'error',
+    //   penalty: 20,
+    //   description: 'The domain directory must exist.',
+    //   suggestion: 'Create src/domain and keep domain code there.',
+    // },
+  ],
+
+  /*
+   * Organization rules use static ES module imports/exports only.
+   * require(), module.exports, and dynamic import() are not analyzed.
+   */
+  organizationRules: [
+    // {
+    //   id: 'component-test-convention',
+    //   type: 'test-target',
+    //   targetPattern: /^(?<directory>src\/components\/(?<name>[^/]+))\/\k<name>\.(?<ext>tsx?)$/,
+    //   testPathTemplate: '$<directory>/__test__/$<name>.test.$<ext>',
+    //   requireImport: true,
+    //   severity: 'error',
+    //   penalty: 20,
+    //   description: 'Component tests must be colocated under __test__.',
+    //   suggestion: 'Use <name>.test.<ext> under the target __test__ directory.',
+    // },
+    // {
+    //   id: 'shared-constants-location',
+    //   type: 'shared-symbol-location',
+    //   symbolType: 'constant',
+    //   symbolPattern: /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/,
+    //   allowedFilePattern: /(?:^|[./])[^/]*constants[^/]*\.[cm]?[jt]sx?$/,
+    //   severity: 'warning',
+    //   penalty: 10,
+    //   description: 'Shared constants must be exported from a constants file.',
+    //   suggestion: 'Move the shared constant to a constants-named module.',
+    // },
+  ],
+
   security: {
     /*
      * publicEndpoints REPLACE vs EXTRA

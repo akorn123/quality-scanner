@@ -213,4 +213,35 @@ describe('HTML release confidence links', () => {
     );
     assert.match(html, /<html lang="en" data-theme="light">/);
   });
+
+  it('shows path and organization categories in structure findings', () => {
+    const html = renderHtml({
+      behavior: report('behavior'),
+      testability: report('testability'),
+      security: report('security'),
+      structure: {
+        summary: {
+          totalFindings: 2,
+          categories: {
+            path: 1,
+            organization: 1,
+          },
+        },
+        results: [],
+      },
+      quality: {
+        ...baseQuality,
+        releaseChecks: [],
+      },
+      artifacts: {
+        eMarkers: 0,
+        approvedExcluded: 0,
+        fixableCandidates: 0,
+        unclassified: 0,
+      },
+    });
+
+    assert.match(html, /Structure/);
+    assert.match(html, /path \(1\), organization \(1\)/);
+  });
 });

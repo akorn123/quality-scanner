@@ -138,6 +138,8 @@ The example file documents:
 
 - `testablePathPrefixes` for narrowing coverage targets
 - `behaviorRules` for local engineering conventions
+- `pathRules` for naming and required/forbidden filesystem paths
+- `organizationRules` for test placement and shared symbol organization
 - security `publicEndpoints` **replace** vs `publicEndpointsExtra` **append** (and the same Extra pattern for middleware patterns)
 
 The most important extension point is `behaviorRules`:
@@ -160,6 +162,138 @@ module.exports = {
 ```
 
 That gives each adopting team a way to encode local engineering knowledge without modifying the scanner itself.
+
+### Custom path and naming rules
+
+Projects can also define `pathRules` for naming conventions and forbidden
+file or directory path patterns. These rules match normalized paths relative
+to the project root, including both files and directories under `scanRoots`.
+They do not inspect file contents.
+
+```js
+module.exports = {
+  pathRules: [
+    {
+      id: 'no-pascal-case-source-paths',
+      category: 'naming',
+      severity: 'error',
+      penalty: 15,
+      description: 'Source paths must use lowercase kebab-case.',
+      suggestion: 'Rename the file or directory using lowercase kebab-case.',
+      pathPattern: /(?:^|[\\/])[^\\/]*[A-Z][^\\/]*(?:$|\.[cm]?[jt]sx?$)/,
+    },
+  ],
+};
+```
+
+Each path rule requires a unique `id` and either a regular-expression
+`pathPattern` or an exact project-relative `path`. It may also define `mode`,
+`category`, `severity`, `penalty`,
+`description`, and `suggestion`; defaults are `naming`, `warning`, and `5`.
+Matching paths are reported under the `structure` concern and in
+`structure.json` and the CI dashboard JSON. They are not included in the
+weighted Overall Quality score unless a project explicitly assigns a
+`weights.structure` value. Error and fatal structure findings block release
+confidence.
+
+Rules default to `mode: 'forbidden'`, so a matching path produces a finding.
+Use `mode: 'required'` with an exact project-relative `path` or a
+`pathPattern` when at least one matching file or directory must exist:
+
+```js
+module.exports = {
+  pathRules: [
+    {
+      id: 'requires-domain-directory',
+      mode: 'required',
+      path: 'src/domain',
+      category: 'structure',
+      severity: 'error',
+      penalty: 20,
+      description: 'The domain directory must exist.',
+      suggestion: 'Create src/domain and keep domain code there.',
+    },
+    {
+      id: 'forbid-legacy-directory',
+      mode: 'forbidden',
+      path: 'src/legacy',
+      description: 'Legacy code must not be present.',
+      suggestion: 'Migrate or remove the legacy directory.',
+    },
+  ],
+};
+```
+
+Path rules include directories, even empty directories. Exact `path` rules
+are checked against the project filesystem; pattern rules match discovered
+paths under `scanRoots`. Missing required paths are reported as structure
+findings with the expected path.
+
+Run only these checks with:
+
+```bash
+npx quality-scanner --concern structure
+```
+
+### Organization rules
+
+Use `organizationRules` for relationships between source files, tests, and
+static module symbols. These rules analyze only static ES module syntax:
+`import`, `export`, and named/default import relationships. They do not use
+`require()`, `module.exports`, or dynamic `import()`.
+
+Test-target conventions use a target path regex and a replacement template:
+
+```js
+{
+  id: 'component-test-convention',
+  type: 'test-target',
+  targetPattern:
+    /^(?<directory>src\/components\/(?<name>[^/]+))\/\k<name>\.(?<ext>tsx?)$/,
+  testPathTemplate: '$<directory>/__test__/$<name>.test.$<ext>',
+  requireImport: true,
+  severity: 'error',
+  penalty: 20,
+  description: 'Component tests must be colocated under __test__.',
+  suggestion: 'Use <name>.test.<ext> under the target __test__ directory.',
+}
+```
+
+Shared exported symbols can be restricted to approved filenames. The rule
+counts static ES module consumers and only reports symbols used by at least
+`minimumConsumers` files:
+
+```js
+{
+  id: 'shared-constants-location',
+  type: 'shared-symbol-location',
+  symbolType: 'constant',
+  symbolPattern: /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/,
+  allowedFilePattern: /(?:^|[./])[^/]*constants[^/]*\.[cm]?[jt]sx?$/,
+  minimumConsumers: 2,
+  description: 'Shared constants must be exported from a constants file.',
+  suggestion: 'Move the shared constant to a constants-named module.',
+}
+```
+
+Use `symbolType: 'function'` and an allowed filename containing `utils` for
+shared utility functions:
+
+```js
+{
+  id: 'shared-functions-location',
+  type: 'shared-symbol-location',
+  symbolType: 'function',
+  symbolPattern: /^[a-z][A-Za-z0-9]+$/,
+  allowedFilePattern: /(?:^|[./])[^/]*utils[^/]*\.[cm]?[jt]sx?$/,
+  minimumConsumers: 2,
+  description: 'Shared functions must be exported from a utils file.',
+  suggestion: 'Move the shared function to a utils-named module.',
+}
+```
+
+Named exports and named/default function exports are supported. Organization
+findings are reported under the `structure` concern.
 
 ## Ignore comments
 
