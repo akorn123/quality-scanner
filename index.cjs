@@ -42,6 +42,7 @@ const {
 
 const {
   launchReport,
+  parseDashboardPort,
 } = require('./lib/report-server.cjs');
 
 const {
@@ -95,10 +96,11 @@ const getCiOutputDir = () => {
     '--reuse-artifacts',
     '--force-tests',
     '--no-open',
+    '--port',
     '--list-rules',
   ]);
 
-  if (!ciArg || skipArgs.has(ciArg)) {
+  if (!ciArg || skipArgs.has(ciArg) || ciArg.startsWith('--port=')) {
     return null;
   }
 
@@ -159,11 +161,23 @@ const main = async () => {
   }
 
   const {
-    config,
+    config: loadedConfig,
     configFile,
   } = loadConfig(
     getArg('--config'),
   );
+
+  const portProvided = has('--port') ||
+    process.argv.some((arg) => arg.startsWith('--port='));
+  const config = {
+    ...loadedConfig,
+    dashboard: {
+      ...loadedConfig.dashboard,
+      port: parseDashboardPort(
+        portProvided ? getArg('--port') : loadedConfig.dashboard?.port ?? 0,
+      ),
+    },
+  };
 
   const concern =
     getArg('--concern') ?? 'all';

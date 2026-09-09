@@ -21,6 +21,8 @@ module.exports = {
    * project-owned, so it survives npm package updates.
    */
   dashboard: {
+    // Use 0 for an automatically assigned port, or a fixed port such as 8080.
+    port: 0,
     defaultTheme: 'dark',
     preferenceFile: '.quality-scanner/quality-scanner-preferences.json',
   },

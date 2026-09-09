@@ -37,6 +37,7 @@ module.exports = {
     'reports/quality-scanner',
 
   dashboard: {
+    port: 0,
     defaultTheme: 'dark',
     preferenceFile:
       '.quality-scanner/quality-scanner-preferences.json',

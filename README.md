@@ -226,7 +226,23 @@ reports/quality-scanner/
 
 The HTML dashboard embeds source context for every finding. Clicking a file/line link jumps to the scanned source excerpt with the finding line highlighted.
 
-Unless `--no-open` is passed, the scanner starts a local Node static server on an ephemeral port and opens the dashboard URL.
+Unless `--no-open` is passed, the scanner starts a local Node static server on an automatically assigned port and opens the dashboard URL. Set a fixed port for a run with:
+
+```sh
+npx quality-scanner --port 8080
+```
+
+`--port=8080` is also supported. To save the port for a project, set `dashboard.port` in `quality-scanner.config.cjs`:
+
+```js
+module.exports = {
+  dashboard: {
+    port: 8080,
+  },
+};
+```
+
+The command-line option overrides the config setting. Ports must be integers from `0` to `65535`; `0` (the default) selects an available port automatically. The dashboard stays bound to `127.0.0.1`. If a fixed port is already in use, startup fails instead of switching ports. CI mode and `--no-open` do not start the dashboard server.
 
 ### Dashboard theme preference
 
