@@ -195,23 +195,6 @@ const main = async () => {
     return 0;
   }
 
-  const testRun = shouldRunTestCollection({
-    coverageTarget,
-    concern,
-  })
-    ? await runProjectTests({
-        config,
-        concern,
-        reuseArtifacts:
-          !has('--force-tests'),
-        ciMode: isCiMode,
-      })
-    : {
-        ran: false,
-        runner: null,
-        detected: [],
-      };
-
   const files =
     resolveFiles(config);
   const resolvedPaths =
@@ -240,6 +223,26 @@ const main = async () => {
     config,
   );
 
+  const testRun = shouldRunTestCollection({
+    coverageTarget,
+    concern,
+  })
+    ? await runProjectTests({
+        config,
+        concern,
+        reuseArtifacts:
+          !has('--force-tests'),
+        ciMode: isCiMode,
+        expectedCoverageFiles:
+          [...targetToTests.keys()],
+        expectedTestFiles: testFiles,
+      })
+    : {
+        ran: false,
+        runner: null,
+        detected: [],
+      };
+
   const coverageRequired =
     concern === 'all' ||
     concern === 'testability' ||
@@ -250,6 +253,7 @@ const main = async () => {
       config,
       coverageRequired,
       coverageTarget,
+      [...targetToTests.keys()],
     );
 
   const scans =

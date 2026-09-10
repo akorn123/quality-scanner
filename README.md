@@ -93,6 +93,22 @@ The final CI readout also colors release confidence, health, test outcomes, find
 
 Test and coverage artifacts are reused automatically when both are valid and were updated within the previous 24 hours. The scanner searches all configured `testResultsPaths` and `coverageSummaryPaths`, so artifacts remain discoverable even when a package update changes the preferred output location.
 
+Freshness alone only proves an artifact is recent, not that it reflects the full test suite - e.g. someone manually running `vitest run one.test.js --coverage` produces a coverage-summary.json that is perfectly "fresh" but only accounts for one file, which would otherwise cause the scanner to silently treat every other file as untested. To guard against this, reused (and freshly loaded) coverage/test-result artifacts are also checked for **completeness**: the scanner compares the files actually reported in the coverage summary, and the test files reflected in the normalized test-results artifact (when the runner reports per-suite data), against every testable file discovered under `scanRoots`. If either falls below the configured ratio, the artifact pair is rejected - reuse falls back to regenerating a full run, and an explicit final load fails loudly instead of producing a misleadingly low quality score.
+
+Configure the thresholds (or disable the check) in your config:
+
+```js
+module.exports = {
+  completeness: {
+    enabled: true,
+    minCoverageFileRatio: 0.9, // share of testable files that must appear in coverage
+    minTestFileRatio: 0.9,     // share of discovered test files the run must have executed
+  },
+};
+```
+
+Passing an explicit `-coverage-target` opts out of the coverage completeness check, since that flag is an intentional, narrow scope rather than a stand-in for the full suite.
+
 To change the rolling freshness window:
 
 ```js

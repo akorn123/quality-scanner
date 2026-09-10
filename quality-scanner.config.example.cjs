@@ -54,6 +54,19 @@ module.exports = {
   },
 
   /*
+   * Freshness alone only proves an artifact is recent, not that it came
+   * from a full test run. This guards against "fresh but partial" reports
+   * (e.g. someone manually ran a single test file with --coverage) by
+   * requiring the coverage summary / test results to account for most of
+   * the testable files discovered under scanRoots before they're trusted.
+   */
+  completeness: {
+    enabled: true,
+    minCoverageFileRatio: 0.9,
+    minTestFileRatio: 0.9,
+  },
+
+  /*
    * Project-specific behavior rules are appended to the built-in defaults.
    * Encode local engineering conventions here without forking the scanner.
    */

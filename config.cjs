@@ -66,6 +66,27 @@ module.exports = {
     maxAgeHours: 24,
   },
 
+  /*
+   * Guards against "fresh but partial" test/coverage artifacts - e.g. a
+   * developer manually running a handful of test files with --coverage,
+   * which produces a recently-modified coverage-summary.json that only
+   * covers those files. Without this check, that partial report would be
+   * accepted as if the full suite ran, silently understating quality for
+   * every file left out.
+   */
+  completeness: {
+    enabled: true,
+
+    /* Minimum share of testable source files that must appear in the
+     * coverage summary for it to be trusted as a full-suite run. */
+    minCoverageFileRatio: 0.9,
+
+    /* Minimum share of discovered test files that must appear in the
+     * normalized test-results artifact (when the runner reports per-file
+     * test data). */
+    minTestFileRatio: 0.9,
+  },
+
   testRunner: {
     enabled: true,
 
